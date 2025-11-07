@@ -14,8 +14,30 @@ const wss = new WebSocket.Server({ noServer: true });
 // 2. Crear el servidor HTTP y pasarle la instancia de WSS para el endpoint de estado
 const server = createHttpServer(wss);
 
-// 3. Conectar el servidor HTTP con el servidor WebSocket
+
+server.on('request', (req, res) => {
+  if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('✅ WebRTC Signaling Server is running');
+  }
+});
+
+// // 3. Conectar el servidor HTTP con el servidor WebSocket
+// server.on('upgrade', (request, socket, head) => {
+//   wss.handleUpgrade(request, socket, head, (ws) => {
+//     wss.emit('connection', ws, request);
+//   });
+// });
+
 server.on('upgrade', (request, socket, head) => {
+  // Permitir CORS en Azure
+  const origin = request.headers.origin;
+  if (origin && origin.includes('azurewebsites.net')) {
+    socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
+      'Access-Control-Allow-Origin: *\r\n' +
+      '\r\n');
+  }
+
   wss.handleUpgrade(request, socket, head, (ws) => {
     wss.emit('connection', ws, request);
   });
