@@ -24,12 +24,12 @@ server.on('request', (req, res) => {
 
 // 3. Manejar upgrade correctamente (sin escribir headers manuales)
 server.on('upgrade', (request, socket, head) => {
-  // Opcional: podés filtrar solo un path concreto (más ordenado)
-  if (request.url === '/ws' || request.url === '/') {
+  try {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request);
     });
-  } else {
+  } catch (err) {
+    console.error('Error en handshake WebSocket:', err);
     socket.destroy();
   }
 });

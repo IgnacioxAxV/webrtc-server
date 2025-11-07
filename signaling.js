@@ -54,7 +54,7 @@ function setupSignaling(wss) {
                     });
                 }
             } catch (error) {
-                console.error(`❌ Error al manejar mensaje de ${userId}:`, message.toString(), error);
+                console.error(`Error al manejar mensaje de ${userId}:`, message.toString(), error);
             }
         });
 
