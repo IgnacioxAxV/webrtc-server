@@ -36,15 +36,25 @@ function setupSignaling(wss) {
         ws.on('message', message => {
             try {
                 const parsedMessage = JSON.parse(message);
-                const targetClient = clients.get(parsedMessage.userId);
 
-                if (targetClient && targetClient.readyState === WebSocket.OPEN) {
-                    // Añadir el ID del remitente al mensaje antes de reenviarlo
-                    const messageToSend = { ...parsedMessage, fromUserId: userId };
-                    targetClient.send(JSON.stringify(messageToSend));
+                // Si el mensaje tiene un destinatario específico, enviarlo solo a él
+                if (parsedMessage.userId) {
+                    const targetClient = clients.get(parsedMessage.userId);
+                    if (targetClient && targetClient.readyState === WebSocket.OPEN) {
+                        const messageToSend = { ...parsedMessage, fromUserId: userId };
+                        targetClient.send(JSON.stringify(messageToSend));
+                    }
+                } else {
+                // Si no tiene destino, reenviarlo a todos los demás (broadcast)
+                    clients.forEach((client, id) => {
+                        if (id !== userId && client.readyState === WebSocket.OPEN) {
+                            const messageToSend = { ...parsedMessage, fromUserId: userId };
+                            client.send(JSON.stringify(messageToSend));
+                        }
+                    });
                 }
             } catch (error) {
-                console.error(`Fallo al parsear mensaje o formato inválido de ${userId}:`, message.toString(), error);
+                console.error(`❌ Error al manejar mensaje de ${userId}:`, message.toString(), error);
             }
         });
 
